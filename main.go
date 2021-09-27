@@ -24,11 +24,11 @@ func main() {
 		panic(err)
 	}
 	// show the HTML code as a string %s
-	fmt.Printf("%s\n", html)
-	foundemails()
+	souphtml := fmt.Sprintf("%s\n", html)
+	foundemails(souphtml)
 }
-func foundemails() {
-	text := []byte(`Send me an email at foo@bar.com or foo@domain.fakesuffix.`)
+func foundemails(souphtml string) {
+	text := []byte(souphtml)
 	validateHost := false
 
 	emails := emailaddress.Find(text, validateHost)
