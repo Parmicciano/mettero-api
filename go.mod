@@ -3,6 +3,8 @@ module api/main
 go 1.17
 
 require (
+	github.com/PuerkitoBio/goquery v1.7.1 // indirect
+	github.com/andybalholm/cascadia v1.2.0 // indirect
 	github.com/chromedp/cdproto v0.0.0-20210921215903-b0b4414ddbe0 // indirect
 	github.com/chromedp/chromedp v0.7.4 // indirect
 	github.com/chromedp/sysutil v1.0.0 // indirect
