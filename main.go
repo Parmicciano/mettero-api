@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
@@ -13,9 +14,15 @@ import (
 
 func main() {
 	LINKS := []string{}
-
-	doc, err := goquery.NewDocument("https://apple.com")
-
+	urltoget := "https://apple.com"
+	doc, err := goquery.NewDocument(urltoget)
+	u, err := url.Parse(urltoget)
+	if err != nil {
+		log.Fatal(err)
+	}
+	parts := strings.Split(u.Hostname(), ".")
+	domain := parts[len(parts)-2] + "." + parts[len(parts)-1]
+	domainame := fmt.Sprintln(domain)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -28,6 +35,9 @@ func main() {
 	for i := 0; i < len(LINKS); i++ {
 
 		url := fmt.Sprintf(LINKS[i])
+
+		// reste a traiter les url internes
+
 		if strings.Contains(url, "https") {
 			fmt.Printf("HTML code of %s ...\n", url)
 			resp, err := http.Get(url)
@@ -47,7 +57,6 @@ func main() {
 			foundemails(souphtml)
 		}
 	}
-
 }
 func foundemails(souphtml string) {
 	text := []byte(souphtml)
