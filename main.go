@@ -1,69 +1,39 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"io/ioutil"
-	"log"
-	"time"
+	"net/http"
 
-	cdp "github.com/knq/chromedp"
-	cdptypes "github.com/knq/chromedp/cdp"
+	"github.com/mcnijman/go-emailaddress"
 )
 
 func main() {
-	var err error
-
-	// create context
-	ctxt, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	// create chrome instance
-	c, err := cdp.New(ctxt)
+	url := "http://tour.golang.org/welcome/"
+	fmt.Printf("HTML code of %s ...\n", url)
+	resp, err := http.Get(url)
+	// handle the error if there is one
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
-
-	// run task list
-	var site, res string
-	err = c.Run(ctxt, googleSearch("site:brank.as", "Easy Money Management", &site, &res))
+	// do this now so it won't be forgotten
+	defer resp.Body.Close()
+	// reads html as a slice of bytes
+	html, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
-
-	// shutdown chrome
-	err = c.Shutdown(ctxt)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// wait for chrome to finish
-	err = c.Wait()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	log.Printf("saved screenshot of #testimonials from search result listing `%s` (%s)", res, site)
+	// show the HTML code as a string %s
+	fmt.Printf("%s\n", html)
+	foundemails()
 }
+func foundemails() {
+	text := []byte(`Send me an email at foo@bar.com or foo@domain.fakesuffix.`)
+	validateHost := false
 
-func googleSearch(q, text string, site, res *string) cdp.Tasks {
-	var buf []byte
-	sel := fmt.Sprintf(`//a[text()[contains(., '%s')]]`, text)
-	return cdp.Tasks{
-		cdp.Navigate(`https://www.google.com`),
-		cdp.Sleep(2 * time.Second),
-		cdp.WaitVisible(`#hplogo`, cdp.ByID),
-		cdp.SendKeys(`#lst-ib`, q+"\n", cdp.ByID),
-		cdp.WaitVisible(`#res`, cdp.ByID),
-		cdp.Text(sel, res),
-		cdp.Click(sel),
-		cdp.Sleep(2 * time.Second),
-		cdp.WaitVisible(`#footer`, cdp.ByQuery),
-		cdp.WaitNotVisible(`div.v-middle > div.la-ball-clip-rotate`, cdp.ByQuery),
-		cdp.Location(site),
-		cdp.Screenshot(`#testimonials`, &buf, cdp.ByID),
-		cdp.ActionFunc(func(context.Context, cdptypes.FrameHandler) error {
-			return ioutil.WriteFile("testimonials.png", buf, 0644)
-		}),
+	emails := emailaddress.Find(text, validateHost)
+
+	for _, e := range emails {
+		fmt.Println(e)
 	}
 }
