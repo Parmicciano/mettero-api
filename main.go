@@ -8,19 +8,20 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
-
 	"github.com/PuerkitoBio/goquery"
 	"github.com/mcnijman/go-emailaddress"
+	_ "github.com/go-sql-driver/mysql"
 )
 
 func main() {
 	db, err := sql.Open("mysql", "Parmicciano:Cholet44$$@tcp(15.236.150.103:3306)/mettero")
-
-	// if there is an error opening the connection, handle it
 	if err != nil {
-		panic(err.Error())
-	}
-	defer db.Close()
+        panic(err.Error())
+    }
+
+    // defer the close till after the main function has finished
+    // executing
+    defer db.Close()
 	LINKS := []string{}
 	urltoget := "https://apple.com"
 	doc, err := goquery.NewDocument(urltoget)
