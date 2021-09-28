@@ -13,6 +13,7 @@ import (
 )
 
 func main() {
+
 	LINKS := []string{}
 	urltoget := "https://apple.com"
 	doc, err := goquery.NewDocument(urltoget)
@@ -22,7 +23,7 @@ func main() {
 	}
 	parts := strings.Split(u.Hostname(), ".")
 	domain := parts[len(parts)-2] + "." + parts[len(parts)-1]
-	domainame := fmt.Sprintln(domain)
+	domainame := fmt.Sprint(domain)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -30,13 +31,17 @@ func main() {
 	doc.Find("a[href]").Each(func(index int, item *goquery.Selection) {
 		href, _ := item.Attr("href")
 		fmt.Printf("link: %s - anchor text: %s\n", href, item.Text())
+		
+		if strings.Contains(href, "https") == false {
+			href = "https://"+domainame+href
+		}
 		LINKS = append(LINKS, href)
 	})
 	for i := 0; i < len(LINKS); i++ {
 
 		url := fmt.Sprintf(LINKS[i])
 
-		// reste a traiter les url internes
+		
 
 		if strings.Contains(url, "https") {
 			fmt.Printf("HTML code of %s ...\n", url)
