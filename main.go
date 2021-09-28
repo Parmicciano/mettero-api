@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -13,7 +14,13 @@ import (
 )
 
 func main() {
+	db, err := sql.Open("mysql", "Parmicciano:Cholet44$$@tcp(15.236.150.103:3306)/mettero")
 
+	// if there is an error opening the connection, handle it
+	if err != nil {
+		panic(err.Error())
+	}
+	defer db.Close()
 	LINKS := []string{}
 	urltoget := "https://apple.com"
 	doc, err := goquery.NewDocument(urltoget)
@@ -31,17 +38,15 @@ func main() {
 	doc.Find("a[href]").Each(func(index int, item *goquery.Selection) {
 		href, _ := item.Attr("href")
 		fmt.Printf("link: %s - anchor text: %s\n", href, item.Text())
-		
+
 		if strings.Contains(href, "https") == false {
-			href = "https://"+domainame+href
+			href = "https://" + domainame + href
 		}
 		LINKS = append(LINKS, href)
 	})
 	for i := 0; i < len(LINKS); i++ {
 
 		url := fmt.Sprintf(LINKS[i])
-
-		
 
 		if strings.Contains(url, "https") {
 			fmt.Printf("HTML code of %s ...\n", url)
@@ -62,6 +67,7 @@ func main() {
 			foundemails(souphtml)
 		}
 	}
+
 }
 func foundemails(souphtml string) {
 	text := []byte(souphtml)
