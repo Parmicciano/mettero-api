@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"net/url"
+	"regexp"
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
@@ -29,68 +29,72 @@ func main() {
 		var url string
 		var userid int
 		var dbid int
+
 		err = rows.Scan(&url, &userid, &dbid)
 		if err != nil {
 			// handle this error
 			panic(err)
 		}
+
 		fmt.Println(url, userid, dbid)
-	}
-	// get any error encountered during iteration
-	err = rows.Err()
-	if err != nil {
-		panic(err)
-	}
-
-	defer db.Close()
-	LINKS := []string{}
-	urltoget := ""
-	doc, err := goquery.NewDocument(urltoget)
-	u, err := url.Parse(urltoget)
-	if err != nil {
-		log.Fatal(err)
-	}
-	parts := strings.Split(u.Hostname(), ".")
-	domain := parts[len(parts)-2] + "." + parts[len(parts)-1]
-	domainame := fmt.Sprint(domain)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	doc.Find("a[href]").Each(func(index int, item *goquery.Selection) {
-		href, _ := item.Attr("href")
-		fmt.Printf("link: %s - anchor text: %s\n", href, item.Text())
-
-		if strings.Contains(href, "https") == false {
-			href = "https://" + domainame + href
+		// get any error encountered during iteration
+		err = rows.Err()
+		if err != nil {
+			panic(err)
 		}
-		LINKS = append(LINKS, href)
-	})
-	for i := 0; i < len(LINKS); i++ {
+		defer db.Close()
+		LINKS := []string{}
 
-		url := fmt.Sprintf(LINKS[i])
-
-		if strings.Contains(url, "https") {
-			fmt.Printf("HTML code of %s ...\n", url)
-			resp, err := http.Get(url)
-			// handle the error if there is one
-			if err != nil {
-				panic(err)
-			}
-			// do this now so it won't be forgotten
-			defer resp.Body.Close()
-			// reads html as a slice of bytes
-			html, err := ioutil.ReadAll(resp.Body)
-			if err != nil {
-				panic(err)
-			}
-			// show the HTML code as a string %s
-			souphtml := fmt.Sprintf("%s\n", html)
-			foundemails(souphtml)
+		doc, err := goquery.NewDocument(url)
+		if err != nil {
+			log.Fatal(err)
 		}
+
+		doc.Find("a[href]").Each(func(index int, item *goquery.Selection) {
+			href, _ := item.Attr("href")
+			fmt.Printf("link: %s - anchor text: %s\n", href, item.Text())
+
+			re := regexp.MustCompile(`^(?:https?:\/\/)?(?:[^@\/\n]+@)?(?:www\.)?([^:\/\n]+)`)
+
+			submatchall := re.FindAllString(href, -1)
+			for _, element := range submatchall {
+				domainame := fmt.Sprintf(element)
+
+				if strings.Contains(href, "https") == false {
+					href = domainame + href
+
+				}
+			}
+			LINKS = append(LINKS, href)
+		})
+		for i := 0; i < len(LINKS); i++ {
+
+			url := fmt.Sprintf(LINKS[i])
+
+			if strings.Contains(url, "https") {
+				fmt.Printf("HTML code of %s ...\n", url)
+				resp, err := http.Get(url)
+				// handle the error if there is one
+				if err != nil {
+					panic(err)
+				}
+				// do this now so it won't be forgotten
+				defer resp.Body.Close()
+				// reads html as a slice of bytes
+				html, err := ioutil.ReadAll(resp.Body)
+				if err != nil {
+					panic(err)
+				}
+				// show the HTML code as a string %s
+				souphtml := fmt.Sprintf("%s\n", html)
+				foundemails(souphtml)
+			}
+		}
+
 	}
 
 }
+
 func foundemails(souphtml string) {
 	text := []byte(souphtml)
 	validateHost := false

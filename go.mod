@@ -8,6 +8,7 @@ require (
 )
 
 require (
+	github.com/alecthomas/participle v0.7.1 // indirect
 	github.com/andybalholm/cascadia v1.2.0 // indirect
 	github.com/chromedp/cdproto v0.0.0-20210921215903-b0b4414ddbe0 // indirect
 	github.com/chromedp/chromedp v0.7.4 // indirect
