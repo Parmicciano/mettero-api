@@ -8,22 +8,42 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+
 	"github.com/PuerkitoBio/goquery"
-	"github.com/mcnijman/go-emailaddress"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/mcnijman/go-emailaddress"
 )
 
 func main() {
 	db, err := sql.Open("mysql", "Parmicciano:Cholet44$$@tcp(15.236.150.103:3306)/mettero")
 	if err != nil {
-        panic(err.Error())
-    }
+		panic(err.Error())
+	}
+	rows, err := db.Query("SELECT id, email FROM users")
+	if err != nil {
+		// handle this error better than this
+		panic(err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var id int
+		var firstName string
+		err = rows.Scan(&id, &firstName)
+		if err != nil {
+			// handle this error
+			panic(err)
+		}
+		fmt.Println(id, firstName)
+	}
+	// get any error encountered during iteration
+	err = rows.Err()
+	if err != nil {
+		panic(err)
+	}
 
-    // defer the close till after the main function has finished
-    // executing
-    defer db.Close()
+	defer db.Close()
 	LINKS := []string{}
-	urltoget := "https://apple.com"
+	urltoget := ""
 	doc, err := goquery.NewDocument(urltoget)
 	u, err := url.Parse(urltoget)
 	if err != nil {
