@@ -19,21 +19,22 @@ func main() {
 	if err != nil {
 		panic(err.Error())
 	}
-	rows, err := db.Query("SELECT id, email FROM users")
+	rows, err := db.Query("SELECT url, user_id, db_id FROM users WHERE isvisited=0")
 	if err != nil {
 		// handle this error better than this
 		panic(err)
 	}
 	defer rows.Close()
 	for rows.Next() {
-		var id int
-		var firstName string
-		err = rows.Scan(&id, &firstName)
+		var url string
+		var userid int
+		var dbid int
+		err = rows.Scan(&url ,&userid, &dbid)
 		if err != nil {
 			// handle this error
 			panic(err)
 		}
-		fmt.Println(id, firstName)
+		fmt.Println(url, userid, dbid)
 	}
 	// get any error encountered during iteration
 	err = rows.Err()
