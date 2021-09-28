@@ -19,7 +19,7 @@ func main() {
 	if err != nil {
 		panic(err.Error())
 	}
-	rows, err := db.Query("SELECT url, user_id, db_id FROM users WHERE isvisited=0")
+	rows, err := db.Query("SELECT url, user_id, db_id FROM urltoget WHERE isvisited=0")
 	if err != nil {
 		// handle this error better than this
 		panic(err)
@@ -29,7 +29,7 @@ func main() {
 		var url string
 		var userid int
 		var dbid int
-		err = rows.Scan(&url ,&userid, &dbid)
+		err = rows.Scan(&url, &userid, &dbid)
 		if err != nil {
 			// handle this error
 			panic(err)
