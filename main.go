@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"regexp"
 	"strings"
-
 	"github.com/PuerkitoBio/goquery"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/mcnijman/go-emailaddress"
