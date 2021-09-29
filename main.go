@@ -87,21 +87,35 @@ func main() {
 				}
 				// show the HTML code as a string %s
 				souphtml := fmt.Sprintf("%s\n", html)
-				foundemails(souphtml)
+				text := []byte(souphtml)
+				validateHost := false
+				emails := emailaddress.Find(text, validateHost)
+
+				for _, e := range emails {
+					fmt.Println(e)
+					var emailfound string = fmt.Sprintf("%s", e)
+					if !strings.Contains(emailfound, "png") && !strings.Contains(emailfound, "jpg"){
+						sqlStatement := `
+					INSERT INTO email_found (email, user_id, database_id)
+					VALUES (?, ?, ?)`
+						_, err = db.Exec(sqlStatement, emailfound, userid, dbid)
+						if err != nil {
+							//panic(err)
+						}
+					}
+				}
+
+				sqlStatement := `
+				UPDATE urltoget
+				SET isvisited=?`
+				_, err = db.Exec(sqlStatement, 1)
+				if err != nil {
+					panic(err)
+				}
+
 			}
 		}
 
 	}
 
-}
-
-func foundemails(souphtml string) {
-	text := []byte(souphtml)
-	validateHost := false
-
-	emails := emailaddress.Find(text, validateHost)
-
-	for _, e := range emails {
-		fmt.Println(e)
-	}
 }
