@@ -20,7 +20,7 @@ type WebsiteData struct {
 	Dbid   string
 }
 
-func main() {
+func main() {""
 	resp, err := http.Get("http://35.180.242.58/getData/")
 	if err != nil {
 		fmt.Println("No response from request")
