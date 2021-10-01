@@ -2,19 +2,48 @@ package main
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"regexp"
 	"strings"
+
 	"github.com/PuerkitoBio/goquery"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/mcnijman/go-emailaddress"
 )
 
+type websiteData struct {
+	url    string
+	userid string
+	dbid   string
+}
+
 func main() {
-	
+	resp, err := http.Get("http://35.180.242.58/getData/")
+	if err != nil {
+		fmt.Println("No response from request")
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body) // response body is []byte
+	monjson := fmt.Sprintf(string(body))
+	fmt.Printf(monjson)
+
+	var websiteData1 websiteData
+	erre := json.Unmarshal([]byte(monjson), &websiteData1)
+
+	if erre != nil {
+
+		// if error is not nil
+		// print error
+		fmt.Println(err)
+	}
+
+	fmt.Println("Struct is:", websiteData1)
+
 	db, err := sql.Open("mysql", "Parmicciano:Cholet44$$@tcp(15.236.150.103:3306)/mettero")
 	if err != nil {
 		panic(err.Error())
@@ -94,7 +123,7 @@ func main() {
 				for _, e := range emails {
 					fmt.Println(e)
 					var emailfound string = fmt.Sprintf("%s", e)
-					if !strings.Contains(emailfound, "png") && !strings.Contains(emailfound, "jpg"){
+					if !strings.Contains(emailfound, "png") && !strings.Contains(emailfound, "jpg") {
 						sqlStatement := `
 					INSERT INTO email_found (email, user_id, database_id)
 					VALUES (?, ?, ?)`
