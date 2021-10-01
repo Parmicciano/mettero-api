@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -15,10 +14,10 @@ import (
 	"github.com/mcnijman/go-emailaddress"
 )
 
-type websiteData struct {
-	url    string
-	userid string
-	dbid   string
+type WebsiteData struct {
+	Url    string
+	Userid string
+	Dbid   string
 }
 
 func main() {
@@ -26,125 +25,86 @@ func main() {
 	if err != nil {
 		fmt.Println("No response from request")
 	}
-	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body) // response body is []byte
 	monjson := fmt.Sprintf(string(body))
 	fmt.Printf(monjson)
 
-	var websiteData1 websiteData
+	var websiteData1 WebsiteData
 	erre := json.Unmarshal([]byte(monjson), &websiteData1)
-
 	if erre != nil {
-
-		// if error is not nil
-		// print error
 		fmt.Println(err)
 	}
+	fmt.Sprintf("Struct is:", websiteData1.Url)
+	url := fmt.Sprintf(websiteData1.Url)
+	userid := fmt.Sprintf(websiteData1.Userid)
+	dbid := fmt.Sprintf(websiteData1.Dbid)
 
-	fmt.Println("Struct is:", websiteData1)
 
-	db, err := sql.Open("mysql", "Parmicciano:Cholet44$$@tcp(15.236.150.103:3306)/mettero")
+	fmt.Sprintf(userid + dbid)
+	defer resp.Body.Close()
+
+	LINKS := []string{}
+
+	doc, err := goquery.NewDocument(url)
 	if err != nil {
-		panic(err.Error())
+		log.Fatal(err)
 	}
-	rows, err := db.Query("SELECT url, user_id, db_id FROM urltoget WHERE isvisited=0")
-	if err != nil {
-		// handle this error better than this
-		panic(err)
-	}
-	defer rows.Close()
-	for rows.Next() {
-		var url string
-		var userid int
-		var dbid int
 
-		err = rows.Scan(&url, &userid, &dbid)
-		if err != nil {
-			// handle this error
-			panic(err)
-		}
+	doc.Find("a[href]").Each(func(index int, item *goquery.Selection) {
+		href, _ := item.Attr("href")
+		fmt.Printf("link: %s - anchor text: %s\n", href, item.Text())
 
-		fmt.Println(url, userid, dbid)
-		// get any error encountered during iteration
-		err = rows.Err()
-		if err != nil {
-			panic(err)
-		}
-		defer db.Close()
-		LINKS := []string{}
+		re := regexp.MustCompile(`^(?:https?:\/\/)?(?:[^@\/\n]+@)?(?:www\.)?([^:\/\n]+)`)
 
-		doc, err := goquery.NewDocument(url)
-		if err != nil {
-			log.Fatal(err)
-		}
+		submatchall := re.FindAllString(href, -1)
+		for _, element := range submatchall {
+			domainame := fmt.Sprintf(element)
 
-		doc.Find("a[href]").Each(func(index int, item *goquery.Selection) {
-			href, _ := item.Attr("href")
-			fmt.Printf("link: %s - anchor text: %s\n", href, item.Text())
-
-			re := regexp.MustCompile(`^(?:https?:\/\/)?(?:[^@\/\n]+@)?(?:www\.)?([^:\/\n]+)`)
-
-			submatchall := re.FindAllString(href, -1)
-			for _, element := range submatchall {
-				domainame := fmt.Sprintf(element)
-
-				if strings.Contains(href, "https") == false {
-					href = domainame + href
-
-				}
-			}
-			LINKS = append(LINKS, href)
-		})
-		for i := 0; i < len(LINKS); i++ {
-
-			url := fmt.Sprintf(LINKS[i])
-
-			if strings.Contains(url, "https") {
-				fmt.Printf("HTML code of %s ...\n", url)
-				resp, err := http.Get(url)
-				// handle the error if there is one
-				if err != nil {
-					panic(err)
-				}
-				// do this now so it won't be forgotten
-				defer resp.Body.Close()
-				// reads html as a slice of bytes
-				html, err := ioutil.ReadAll(resp.Body)
-				if err != nil {
-					panic(err)
-				}
-				// show the HTML code as a string %s
-				souphtml := fmt.Sprintf("%s\n", html)
-				text := []byte(souphtml)
-				validateHost := false
-				emails := emailaddress.Find(text, validateHost)
-
-				for _, e := range emails {
-					fmt.Println(e)
-					var emailfound string = fmt.Sprintf("%s", e)
-					if !strings.Contains(emailfound, "png") && !strings.Contains(emailfound, "jpg") {
-						sqlStatement := `
-					INSERT INTO email_found (email, user_id, database_id)
-					VALUES (?, ?, ?)`
-						_, err = db.Exec(sqlStatement, emailfound, userid, dbid)
-						if err != nil {
-							//panic(err)
-						}
-					}
-				}
-
-				sqlStatement := `
-				UPDATE urltoget
-				SET isvisited=?`
-				_, err = db.Exec(sqlStatement, 1)
-				if err != nil {
-					panic(err)
-				}
+			if strings.Contains(href, "https") == false {
+				href = domainame + href
 
 			}
 		}
+		LINKS = append(LINKS, href)
+	})
+	for i := 0; i < len(LINKS); i++ {
 
+		url := fmt.Sprintf(LINKS[i])
+
+		if strings.Contains(url, "https") {
+			fmt.Printf("HTML code of %s ...\n", url)
+			resp, err := http.Get(url)
+			// handle the error if there is one
+			if err != nil {
+				panic(err)
+			}
+			// do this now so it won't be forgotten
+			defer resp.Body.Close()
+			// reads html as a slice of bytes
+			html, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				panic(err)
+			}
+			// show the HTML code as a string %s
+			souphtml := fmt.Sprintf("%s\n", html)
+			text := []byte(souphtml)
+			validateHost := false
+			emails := emailaddress.Find(text, validateHost)
+
+			for _, e := range emails {
+				fmt.Println(e)
+				var emailfound string = fmt.Sprintf("%s", e)
+				if !strings.Contains(emailfound, "png") && !strings.Contains(emailfound, "jpg") {
+					http.Get("http://35.180.242.58/getData/")
+					
+
+				}
+			}
+
+		
+
+		}
 	}
 
 }
