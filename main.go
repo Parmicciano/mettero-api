@@ -14,6 +14,7 @@ import (
 )
 
 func main() {
+	
 	db, err := sql.Open("mysql", "Parmicciano:Cholet44$$@tcp(15.236.150.103:3306)/mettero")
 	if err != nil {
 		panic(err.Error())
