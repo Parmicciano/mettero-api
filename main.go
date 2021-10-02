@@ -108,10 +108,10 @@ func GETemails() {
 	}
 }
 func main() {
-	maxGoroutines := 100000
+	maxGoroutines := 1000
 	guard := make(chan struct{}, maxGoroutines)
 
-	for i := 0; i < 3000000; i++ {
+	for i := 0; i < 300; i++ {
 		guard <- struct{}{}
 		go func(n int) {
 			GETemails()
