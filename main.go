@@ -20,7 +20,7 @@ type WebsiteData struct {
 	Dbid   string
 }
 
-func main() {
+func GETemails() {
 	for true {
 		resp, err := http.Get("http://35.180.242.58/getData/")
 		if err != nil {
@@ -38,8 +38,11 @@ func main() {
 		}
 		fmt.Sprintf("Struct is:", websiteData1.Url)
 		url := fmt.Sprintf(websiteData1.Url)
+		sitevisite := url
+
 		userid := fmt.Sprintf(websiteData1.Userid)
 		dbid := fmt.Sprintf(websiteData1.Dbid)
+		http.Get("http://35.180.242.58/getData/?websitevisited=" + sitevisite + "&dbid=" + dbid)
 		fmt.Sprintf(userid + dbid)
 		defer resp.Body.Close()
 
@@ -76,7 +79,7 @@ func main() {
 				resp, err := http.Get(url)
 				// handle the error if there is one
 				if err != nil {
-					panic(err)
+					print("error get request")
 				}
 				// do this now so it won't be forgotten
 				defer resp.Body.Close()
@@ -94,8 +97,8 @@ func main() {
 				for _, e := range emails {
 					fmt.Println(e)
 					var emailfound string = fmt.Sprintf("%s", e)
-					if !strings.Contains(emailfound, "png") && !strings.Contains(emailfound, "jpg") {
-						http.Get("http://35.180.242.58/getData/?email=" + emailfound + "&userid=" + userid + "&dbid=" + dbid)
+					if !strings.Contains(emailfound, "png") && !strings.Contains(emailfound, "jpg") && !strings.Contains(emailfound, "www") && !strings.Contains(emailfound, "http") && !strings.Contains(emailfound, "image") && !strings.Contains(emailfound, "webp") {
+						http.Get("http://35.180.242.58/getData/?email=" + emailfound + "&userid=" + userid + "&dbid=" + dbid + "&websitevisited=" + sitevisite)
 
 					}
 				}
@@ -103,4 +106,17 @@ func main() {
 			}
 		}
 	}
+}
+func main() {
+	maxGoroutines := 100000
+	guard := make(chan struct{}, maxGoroutines)
+
+	for i := 0; i < 3000000; i++ {
+		guard <- struct{}{}
+		go func(n int) {
+			GETemails()
+			<-guard
+		}(i)
+	}
+	GETemails()
 }
