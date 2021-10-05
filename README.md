@@ -12,3 +12,7 @@ You can run the executable file on your machine to serve our users.
  There are a few reasons :
   - Making this public has forced me to secure my code, make it with no direct access to the sql database. 
   - It was fun to do because now everyone can found emails with their cpu power such as the bitcoin miners which are using cpu power to secure transaction on the blockchain. 
+
+ 
+ 
+ WARNING : There is different distribution of the program ! Please download the one matching with your operating system
